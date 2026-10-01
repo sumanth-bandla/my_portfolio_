@@ -122,8 +122,8 @@ Regenerate it with `node tools/make-placeholder-resume.mjs`.
 
 ### Social preview image
 
-`index.html` references `public/og-image.png` (1200×630 recommended) for link previews.
-Add that one PNG when you deploy; nothing else depends on it.
+`public/og-image.jpg` (1200×630) is generated and wired into the Open Graph / Twitter meta tags,
+so link previews on LinkedIn, X and WhatsApp render correctly out of the box.
 
 ### Domain
 
