@@ -25,7 +25,7 @@ fully static, so `npm run build` is all Vercel needs.
 
 ## Deploy
 
-**Repository:** https://github.com/sumanth-bandla/portfolio
+**Repository:** https://github.com/sumanth-bandla/my_profile
 
 ### Push
 
