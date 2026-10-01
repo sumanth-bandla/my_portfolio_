@@ -19,6 +19,58 @@ npm run preview  # serve the production build locally
 
 ---
 
+## Deploy
+
+**Repository:** https://github.com/sumanth-bandla/portfolio
+
+### Push
+
+```bash
+git push -u origin main
+```
+
+> The remote already contains a single `Initial commit` (a README) created when the repo was
+> made. If Git rejects the push as non-fast-forward, run `git push --force-with-lease -u origin main`.
+
+### Vercel (recommended)
+
+1. Import the repo at https://vercel.com/new
+2. Framework Preset: **Vite** (detected automatically)
+3. `vercel.json` already pins build command, output directory and cache headers — no manual config needed
+4. Deploy → your URL will look like `https://portfolio-<your-username>.vercel.app`
+5. Put that URL into `index.html` (`YOUR_DOMAIN_URL`, canonical + Open Graph) and `PROFILE` if you want it shown
+
+Netlify / GitHub Pages / Cloudflare Pages all work too — any static host that serves `dist/`.
+
+---
+
+## Certifications
+
+Ten real credential PDFs live in [`public/certificates/`](public/certificates/) and are opened by
+the "View Certificate" buttons (≈5 MB total, fetched only on click, never on page load):
+
+| Certificate | Issuer |
+| --- | --- |
+| Python for Data Science | IBM |
+| Getting Started with Data | IBM SkillsBuild |
+| Data Literacy | IBM SkillsBuild |
+| Explore Emerging Tech | IBM SkillsBuild |
+| Data Analytics Job Simulation | Forage · Deloitte |
+| GenAI Powered Data Analytics Job Simulation | Forage |
+| Data Visualisation: Empowering Business with Effective Insights | Forage |
+| TCS iON Career Edge — AI Foundation | TCS iON |
+| Communication Skills | TCS iON |
+| TCS MasterCraft™ DataPlus — Overview | TCS MasterCraft Academy |
+
+The **TCS iON NQT score card** is shown separately as an assessment result with section-wise
+percentages. Its download button enables once you export it to
+`public/certificates/tcs-ion-nqt-score-card.pdf` and set `SCORE_CARD.link` in `src/data/site.ts`.
+
+`tools/extract-cert-text.mjs` was used to read the issuer/date text out of each PDF, so the card
+labels match the documents exactly.
+
+---
+
 ## Where to edit content (single source of truth)
 
 **Everything you will want to change lives in [`src/data/site.ts`](src/data/site.ts).**
