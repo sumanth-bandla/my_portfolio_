@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { lazy, Suspense, useRef, useState } from 'react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { Atom, BarChart3, Code2, Database, LineChart } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { SKILL_CATEGORIES } from '../data/site';
@@ -7,7 +7,11 @@ import { useIsMobile } from '../lib/hooks';
 import { Reveal } from './ui/Reveal';
 import { Section } from './ui/Section';
 import { SectionHeading } from './ui/SectionHeading';
-import { SkillsCanvas } from './three/SkillsCanvas';
+
+/** Loaded on demand — only when the section is about to be scrolled into view. */
+const SkillsCanvas = lazy(() =>
+  import('./three/SkillsCanvas').then((m) => ({ default: m.SkillsCanvas })),
+);
 
 const ICONS: Record<string, LucideIcon> = {
   programming: Code2,
@@ -45,14 +49,20 @@ export function Skills() {
   const [focused, setFocused] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const reduce = useReducedMotion();
+  const backdropRef = useRef<HTMLDivElement>(null);
+  const nearViewport = useInView(backdropRef, { once: true, margin: '250px' });
 
   return (
     <Section id="skills">
-      {/* 3D ecosystem backdrop */}
+      {/* 3D ecosystem backdrop — mounted only when it is nearly on screen */}
       {!reduce ? (
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
+        <div ref={backdropRef} className="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden>
           <div className="absolute inset-x-0 top-0 h-[560px] opacity-60 sm:opacity-80">
-            <SkillsCanvas quality={isMobile ? 'low' : 'high'} />
+            {nearViewport ? (
+              <Suspense fallback={null}>
+                <SkillsCanvas quality={isMobile ? 'low' : 'high'} />
+              </Suspense>
+            ) : null}
           </div>
           <div className="absolute inset-0 bg-[radial-gradient(70%_50%_at_50%_20%,transparent,rgba(3,4,10,0.75))]" />
         </div>

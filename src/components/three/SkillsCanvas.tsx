@@ -1,10 +1,10 @@
 import { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { AdaptiveDpr, Preload } from '@react-three/drei';
 import * as THREE from 'three';
 import { getDotTexture } from './utils';
 import { SKILL_CATEGORIES } from '../../data/site';
 import { usePageVisible } from '../../lib/hooks';
+import { CompileScene } from './perf';
 
 const ACCENTS: Record<string, string> = {
   cyan: '#38e1ff',
@@ -158,8 +158,7 @@ export function SkillsCanvas({ quality = 'high' }: Props) {
       aria-hidden
     >
       <Network3D />
-      <AdaptiveDpr pixelated />
-      <Preload all />
+      <CompileScene />
     </Canvas>
   );
 }

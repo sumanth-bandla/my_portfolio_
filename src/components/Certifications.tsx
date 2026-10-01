@@ -55,17 +55,6 @@ export function Certifications() {
     return () => window.clearInterval(id);
   }, [reduce, paused, count]);
 
-  const onKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      go(1);
-    }
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      go(-1);
-    }
-  };
-
   return (
     <Section id="certifications">
       <div className="container-x">
@@ -104,8 +93,8 @@ export function Certifications() {
 
         <div
           className="relative mt-10 overflow-hidden"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
+          onPointerEnter={() => setPaused(true)}
+          onPointerLeave={() => setPaused(false)}
           onFocusCapture={() => setPaused(true)}
           onBlurCapture={() => setPaused(false)}
           onPointerDown={(event) => {
@@ -118,12 +107,16 @@ export function Certifications() {
             if (Math.abs(delta) > 45) go(delta < 0 ? 1 : -1);
           }}
         >
+          {/*
+            Keyboard users browse with the Previous / Next buttons and the
+            pagination dots below; the reel itself is only a pointer affordance,
+            so it stays out of the tab order.
+          */}
           <div
             role="group"
-            aria-label="Certification carousel — use the arrow keys to browse"
-            tabIndex={0}
-            onKeyDown={onKeyDown}
-            className="relative mx-auto w-full outline-none"
+            aria-roledescription="carousel"
+            aria-label="Certifications"
+            className="relative mx-auto w-full"
             style={{ height: cardHeight + 56, perspective: `${PERSPECTIVE}px` }}
           >
             <motion.div
@@ -206,7 +199,7 @@ export function Certifications() {
                             href={cert.verify}
                             target="_blank"
                             rel="noreferrer noopener"
-                            className="mt-2 block text-center text-[11px] text-slate-400 underline decoration-white/20 underline-offset-4 transition-colors hover:text-neon-cyan"
+                            className="mt-2 block py-1 text-center text-[11px] text-slate-400 underline decoration-white/20 underline-offset-4 transition-colors hover:text-neon-cyan"
                           >
                             Verify on {cert.issuer}
                           </a>

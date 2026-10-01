@@ -59,7 +59,7 @@ export function Footer() {
               <a
                 key={link.id}
                 href={`#${link.id}`}
-                className="text-[12.5px] text-slate-400 transition-colors hover:text-neon-cyan"
+                className="inline-flex min-h-[24px] items-center rounded px-1 text-[12.5px] text-slate-400 transition-colors hover:text-neon-cyan"
               >
                 {link.label}
               </a>

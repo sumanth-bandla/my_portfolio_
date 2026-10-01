@@ -1,12 +1,17 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NAV_LINKS, PROFILE } from '../data/site';
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('home');
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
+
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -37,15 +42,52 @@ export function Nav() {
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        return;
+      }
+
+      // Keep Tab inside the drawer while it covers the page.
+      if (event.key !== 'Tab') return;
+      const drawer = drawerRef.current;
+      if (!drawer) return;
+      const items = Array.from(drawer.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetParent !== null,
+      );
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
     };
+
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
+
+    // Move focus into the drawer so keyboard and screen-reader users land there.
+    const firstLink = drawerRef.current?.querySelector<HTMLElement>(FOCUSABLE);
+    firstLink?.focus();
+
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
+  }, [open]);
+
+  // Return focus to the trigger whenever the drawer closes (never on mount).
+  const wasOpen = useRef(false);
+  useEffect(() => {
+    if (wasOpen.current && !open && burgerRef.current?.offsetParent) {
+      burgerRef.current.focus();
+    }
+    wasOpen.current = open;
   }, [open]);
 
   const resumeHref = `${import.meta.env.BASE_URL}resume.pdf`;
@@ -110,6 +152,7 @@ export function Nav() {
             </a>
 
             <button
+              ref={burgerRef}
               type="button"
               onClick={() => setOpen((v) => !v)}
               aria-expanded={open}
@@ -140,8 +183,11 @@ export function Nav() {
         </nav>
       </header>
 
+      {/* `inert` while closed so the hidden links are not tabbable. */}
       <motion.div
         id="mobile-menu"
+        ref={drawerRef}
+        {...(open ? {} : { inert: '' })}
         initial={false}
         animate={{ clipPath: open ? 'inset(0% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)' }}
         transition={{ duration: reduce ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}

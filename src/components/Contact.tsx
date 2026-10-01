@@ -76,7 +76,7 @@ export function Contact() {
       <div className="container-x">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] lg:gap-16">
           {/* -------------------------------- left ------------------------------- */}
-          <div>
+          <div className="min-w-0">
             <Reveal>
               <SectionHeading eyebrow="Contact" title={CONTACT.heading} description={CONTACT.text} />
             </Reveal>
@@ -115,8 +115,8 @@ export function Contact() {
           </div>
 
           {/* -------------------------------- form ------------------------------- */}
-          <Reveal delay={0.12}>
-            <form onSubmit={onSubmit} noValidate className="glass p-6 sm:p-8">
+          <Reveal delay={0.12} className="min-w-0">
+            <form onSubmit={onSubmit} noValidate className="glass min-w-0 p-6 sm:p-8">
               <div className="grid gap-4 sm:grid-cols-2">
                 {FIELDS.map((field) => (
                   <div key={field.name} className={field.name === 'subject' ? 'sm:col-span-2' : ''}>

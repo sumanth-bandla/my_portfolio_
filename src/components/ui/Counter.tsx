@@ -8,11 +8,10 @@ type Props = {
   from?: number;
   duration?: number;
   className?: string;
-  format?: (n: number) => string;
 };
 
 /** Counts up once, when the element first scrolls into view. */
-export function Counter({ value, from, duration = 1.6, className, format }: Props) {
+export function Counter({ value, from, duration = 1.6, className }: Props) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduce = useReducedMotion();
@@ -36,7 +35,7 @@ export function Counter({ value, from, duration = 1.6, className, format }: Prop
 
   return (
     <span ref={ref} className={`num ${className ?? ''}`}>
-      {format ? format(Math.round(display)) : Math.round(display).toLocaleString('en-US')}
+      {Math.round(display).toLocaleString('en-US')}
     </span>
   );
 }

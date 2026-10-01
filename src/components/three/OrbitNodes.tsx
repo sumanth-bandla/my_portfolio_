@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 
 type NodeSpec = { radius: number; size: number; color: string; y: number; tilt: number; shape: 'box' | 'octa' };
 

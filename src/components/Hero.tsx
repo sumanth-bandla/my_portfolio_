@@ -1,12 +1,18 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowDown, ArrowRight, Download, Mail, MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { EASE } from '../lib/motion';
 import { useIsMobile, usePageVisible } from '../lib/hooks';
 import { PROFILE } from '../data/site';
-import { HeroCanvas } from './three/HeroCanvas';
 import { Magnetic } from './ui/Magnetic';
 import { SocialLinks } from './SocialLinks';
+
+/**
+ * three.js is the heaviest dependency in the app, so the hero scene is loaded
+ * as a separate chunk. The page paints (text, CTAs, layout) first and the
+ * scene fades in when it is ready.
+ */
+const HeroCanvas = lazy(() => import('./three/HeroCanvas').then((m) => ({ default: m.HeroCanvas })));
 
 const fade = {
   hidden: { opacity: 0, y: 22, filter: 'blur(8px)' },
@@ -50,7 +56,16 @@ export function Hero() {
               aria-hidden
               className="absolute left-1/2 top-1/2 h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(56,225,255,0.18),transparent_68%)] blur-xl"
             />
-            <HeroCanvas quality={quality} paused={!pageVisible || !mounted} />
+            <Suspense
+              fallback={
+                <div
+                  aria-hidden
+                  className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full border border-neon-cyan/25 bg-neon-cyan/[0.05]"
+                />
+              }
+            >
+              <HeroCanvas quality={quality} paused={!pageVisible || !mounted} />
+            </Suspense>
           </div>
         </div>
 

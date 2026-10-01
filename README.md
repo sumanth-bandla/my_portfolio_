@@ -10,12 +10,16 @@ Built with **React + TypeScript + Vite + Tailwind CSS + React Three Fiber (three
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # type-check + production build into dist/
-npm run preview  # serve the production build locally
+npm run dev        # http://localhost:5173
+npm run verify     # lint + typecheck + production build (use this before pushing)
+npm run build      # type-check + production build into dist/
+npm run preview    # serve the production build locally on :4173
 ```
 
 > Windows PowerShell users: if `npm` is blocked by script policy, use `npm.cmd` instead (`npm.cmd install`).
+
+Requires **Node.js 20+** (`.nvmrc` / `engines` field). There are **no environment variables** — the site is
+fully static, so `npm run build` is all Vercel needs.
 
 ---
 
@@ -125,10 +129,20 @@ Regenerate it with `node tools/make-placeholder-resume.mjs`.
 `public/og-image.jpg` (1200×630) is generated and wired into the Open Graph / Twitter meta tags,
 so link previews on LinkedIn, X and WhatsApp render correctly out of the box.
 
-### Domain
+### Domain — one value to change
 
-`index.html` contains `YOUR_DOMAIN_URL` in the canonical link, Open Graph URL and JSON-LD `url`.
-Replace it with your real domain before deploying.
+`site.config.ts` holds the production URL in a single place. The Vite plugin
+(`plugins/siteMeta.ts`) injects it into the canonical link, Open Graph / Twitter tags and the
+JSON-LD `Person` schema at build time, and generates `sitemap.xml` + `robots.txt` for the same host:
+
+```ts
+// site.config.ts
+export const SITE = { url: 'https://your-domain.com', /* … */ };
+```
+
+Change `url`, run `npm run build`, and every reference updates together — the site never points at
+two domains. While the placeholder is still in place, no sitemap is emitted (so no fake URL is
+published).
 
 ---
 
@@ -180,25 +194,70 @@ portfolio/
 
 ## 3D & performance
 
-- Two `<Canvas>` instances total (hero + skills ecosystem).
-- DPR is capped (`[1, 1.75]` desktop, `[1, 1.25]` mobile) and `AdaptiveDpr` lowers it on slow frames.
-- Mobile automatically gets the **low** quality preset: fewer particles, lower-poly core, no antialias, `powerPreference: 'low-power'`.
+- Two `<Canvas>` instances total (hero + skills ecosystem), both **lazy-loaded**: the hero scene is a
+  dynamic import so the page paints text and CTAs first, and the skills ecosystem only mounts when
+  it is ~250 px from the viewport.
+- three.js (≈220 KB gzip) is therefore *not* on the critical path — measured at 182 ms after the main
+  bundle finishes. Critical path ≈ 120 KB gzip (HTML 1.3 KB + CSS 8.4 KB + JS 111 KB).
+- DPR is capped per quality tier, and `src/components/three/perf.tsx` steps it down automatically
+  when measured frame rate drops below 40 fps (no heavyweight helper dependency — `@react-three/drei`
+  was removed entirely).
+- Shaders are compiled up front (`CompileScene`) to avoid a first-frame stutter.
+- Mobile gets the **low** preset: fewer particles, lower-poly core, no antialias, `low-power` GPU hint.
 - Rendering pauses when the tab is hidden (`usePageVisible` → `frameloop="never"`).
 - `prefers-reduced-motion` disables the 3D layers, tilt, magnetic buttons and long animations.
-- three.js is code-split into its own chunk; Framer Motion into another.
+- Framer Motion is code-split into its own chunk; certificate PDFs are fetched only on click
+  (≈5 MB of assets, none of it on first load).
+
+## Quality gates
+
+`npm run verify` runs all three gates that CI would:
+
+| Gate | Command | Result |
+| --- | --- | --- |
+| Lint (ESLint 9 + `react-hooks` + `jsx-a11y`) | `npm run lint` | 0 errors, 0 warnings |
+| Types (`strict`, `noUnusedLocals`, `noUnusedParameters`) | `npm run typecheck` | 0 errors |
+| Production build | `npm run build` | clean |
 
 ## Accessibility
 
 - Lighthouse (production build): **Accessibility 100 · Best Practices 100 · SEO 100**
-- Semantic landmarks, one `<h1>`, skip link, visible focus rings, labelled form fields with
-  inline error messaging, `aria-label`s on icon-only controls, keyboard-operable carousel
-  (arrow keys, buttons, dots).
-- All text meets WCAG AA contrast — the certificate reel darkens with a scrim instead of fading
-  text with opacity.
+- Semantic landmarks, one `<h1>`, two skip links, visible focus rings, labelled form fields with
+  inline error messaging and `aria-invalid`, `aria-label`s on icon-only controls.
+- Mobile drawer: `inert` while closed (hidden links are not tabbable), focus moves in on open,
+  Tab is trapped, Escape closes and focus returns to the toggle.
+- Certificate carousel: `role="group"` + `aria-roledescription="carousel"`, driven by real buttons
+  and 24×24 px pagination targets.
+- All text meets WCAG AA contrast — the reel darkens with a scrim instead of fading text with opacity.
+- Every interactive target is at least 24×24 px (WCAG 2.5.8).
 
 ## Verified
 
-- No console errors or warnings.
-- No horizontal overflow at 320 / 375 / 414 / 768 / 1024 / 1440 px.
-- Every nav anchor resolves; every live link is real (no invented URLs).
-- `resume.pdf`, `favicon.svg` and `robots.txt` all return `200`.
+- No console errors or warnings on load, scroll or interaction.
+- No horizontal overflow at 320 / 375 / 390 / 414 / 768 / 1024 / 1280 / 1440 / 1920 px, and no element
+  escapes the viewport outside a deliberate `overflow-hidden` container.
+- Contact form: empty submit → 4 field errors, invalid email → email error, correcting clears errors.
+- Every nav anchor resolves; every live link is a real URL (no invented links).
+- `og-image.jpg`, `favicon.svg`, `resume.pdf`, `robots.txt` and all 10 certificate PDFs return `200`.
+- `npm audit` → 0 vulnerabilities.
+
+## Project structure
+
+```
+portfolio/
+├── index.html                 # shell; metadata tokens injected at build time
+├── site.config.ts             # ← production URL, name, socials (single source)
+├── plugins/siteMeta.ts        # injects OG/JSON-LD, emits robots.txt + sitemap.xml
+├── vercel.json                # framework, build, output, cache headers
+├── .nvmrc / engines           # Node 20+
+├── eslint.config.js           # ESLint 9 flat config (+ react-hooks, jsx-a11y)
+├── public/
+│   ├── favicon.svg · og-image.jpg · robots.txt (generated) · resume.pdf
+│   └── certificates/          # 10 real credential PDFs
+├── src/
+│   ├── App.tsx
+│   ├── data/site.ts           # ← all copy, links, projects, experience, certs
+│   ├── components/            # sections + three/ (3D) + ui/ (primitives)
+│   └── lib/                   # hooks + shared motion variants
+└── tools/                     # one-off asset utilities (not part of the build)
+```

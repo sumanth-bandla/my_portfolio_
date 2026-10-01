@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { AdaptiveDpr, Preload } from '@react-three/drei';
 import * as THREE from 'three';
 import { OrbitNodes } from './OrbitNodes';
 import { ParticleField } from './ParticleField';
 import { QuantumCore } from './QuantumCore';
+import { AdaptiveDpr, CompileScene } from './perf';
 
 type SceneProps = {
   quality: 'high' | 'low';
@@ -79,8 +79,8 @@ export function HeroCanvas({ quality = 'high', paused = false }: Props) {
       aria-hidden
     >
       <Scene quality={quality} />
-      <AdaptiveDpr pixelated />
-      <Preload all />
+      <AdaptiveDpr max={quality === 'high' ? 1.75 : 1.25} min={quality === 'high' ? 1 : 0.8} />
+      <CompileScene />
     </Canvas>
   );
 }
